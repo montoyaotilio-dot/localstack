@@ -18,6 +18,7 @@ from localstack.services.stores import (
     CrossRegionAttribute,
     LocalAttribute,
 )
+from localstack.utils.tagging import TaggingService
 
 
 @dataclasses.dataclass
@@ -113,7 +114,7 @@ class DynamoDBStore(BaseStore):
     )
 
     # cache table taggings - maps table ARN to tags dict
-    TABLE_TAGS: dict[str, dict] = CrossRegionAttribute(default=dict)
+    TAGS: TaggingService = CrossRegionAttribute(default=TaggingService)
 
     # maps table names to cached table definitions
     table_definitions: dict[str, TableDescription] = LocalAttribute(default=dict)
