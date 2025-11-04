@@ -204,6 +204,16 @@ class TestCloudWatchLogs:
             )
         snapshot.match("error-describe-logs-group", ctx.value.response)
 
+        response = aws_client.logs.list_log_groups()
+        snapshot.match("list-log-groups", response)
+
+        response = aws_client.logs.list_log_groups(logGroupNamePattern="no-such-group")
+        snapshot.match("list-log-groups-pattern-no-match", response)
+        response = aws_client.logs.list_log_groups(
+            logGroupNamePattern=logs_log_group.split("-")[-1]
+        )
+        snapshot.match("list-log-groups-pattern-match", response)
+
         aws_client.logs.create_log_stream(logGroupName=logs_log_group, logStreamName=test_name)
         log_streams_between = aws_client.logs.describe_log_streams(logGroupName=logs_log_group).get(
             "logStreams", []

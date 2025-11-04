@@ -22,6 +22,8 @@ from localstack.aws.api.logs import (
     InputLogEvents,
     InvalidParameterException,
     KmsKeyId,
+    ListLogGroupsRequest,
+    ListLogGroupsResponse,
     ListTagsForResourceResponse,
     ListTagsLogGroupResponse,
     LogGroupClass,
@@ -137,6 +139,21 @@ class LogsProvider(LogsApi, ServiceLifecycleHook):
             request_copy["logGroupName"] = log_group_identifier.split(":")[-1]
 
         return moto.call_moto_with_request(context, request_copy)
+
+    @handler("ListLogGroups", expand=False)
+    def list_log_groups(
+        self, context: RequestContext, request: ListLogGroupsRequest
+    ) -> ListLogGroupsResponse:
+        pattern: str | None = request.get("logGroupNamePattern")
+        region_backend: LogsBackend = get_moto_logs_backend(context.account_id, context.region)
+        copy_groups = copy.deepcopy(region_backend.groups)
+        groups = [
+            group.to_describe_dict()
+            for name, group in copy_groups.items()
+            if not pattern or pattern in name
+        ]
+        groups = sorted(groups, key=lambda x: x["logGroupName"])
+        return ListLogGroupsResponse(logGroups=groups)
 
     def create_log_group(
         self,
